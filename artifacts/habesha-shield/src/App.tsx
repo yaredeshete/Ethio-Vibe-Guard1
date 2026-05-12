@@ -21,7 +21,7 @@ import Admin from "./pages/admin";
 
 export default function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="habesha-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="ethiowave-theme">
       <AuthProvider>
         <Layout>
           <Switch>

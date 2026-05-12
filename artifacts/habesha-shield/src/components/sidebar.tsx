@@ -1,7 +1,6 @@
-import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../contexts/AuthContext";
-import { Shield, Home, Compass, Users, MessageSquare, Settings, ShieldCheck, LogOut, LayoutDashboard, ShieldAlert } from "lucide-react";
+import { Music2, Home, Compass, Users, MessageSquare, Settings, ShieldCheck, LogOut, LayoutDashboard, ShieldAlert } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Sidebar() {
@@ -24,9 +23,11 @@ export function Sidebar() {
 
   return (
     <div className="w-64 h-full bg-card border-r flex flex-col p-4 flex-shrink-0">
-      <div className="flex items-center gap-2 mb-8 px-2 text-primary">
-        <Shield className="w-8 h-8" />
-        <span className="font-bold text-xl tracking-tight">HabeshaShield</span>
+      <div className="flex items-center gap-2 mb-8 px-2">
+        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <Music2 className="w-5 h-5 text-white" />
+        </div>
+        <span className="font-bold text-xl tracking-tight text-primary">EthioWave</span>
       </div>
 
       <nav className="flex-1 space-y-2">

@@ -9,6 +9,9 @@ import { createSecurityAlert } from "./lib/audit";
 
 const app: Express = express();
 
+// Trust the reverse proxy (Replit uses X-Forwarded-For headers)
+app.set("trust proxy", 1);
+
 // Security headers via Helmet
 // Protects against XSS, clickjacking, MIME sniffing, and other common attacks
 app.use(

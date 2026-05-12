@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../contexts/AuthContext";
 import { useGetTrendingTracks, useGetFeaturedArtists } from "@workspace/api-client-react";
-import { Shield, Play, User as UserIcon, ArrowRight } from "lucide-react";
+import { Music2, Play, User as UserIcon, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 import { Card, CardContent } from "../components/ui/card";
@@ -24,19 +24,21 @@ export default function Home() {
       <section className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/90 to-background border border-primary/20 p-8 md:p-16">
         <div className="relative z-10 max-w-3xl space-y-6">
           <div className="flex items-center gap-3 text-accent mb-6">
-            <Shield className="w-8 h-8" />
-            <span className="font-bold text-xl tracking-widest uppercase">HabeshaShield</span>
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+              <Music2 className="w-6 h-6" />
+            </div>
+            <span className="font-bold text-2xl tracking-widest uppercase">EthioWave</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
-            The secure heartbeat of Ethiopian music.
+            The pulse of Ethiopian music.
           </h1>
           <p className="text-lg md:text-xl text-white/80 max-w-2xl">
-            Discover, connect, and celebrate our culture in a space built for community and protected by cutting-edge security.
+            Discover thousands of Ethiopian tracks, connect with legendary and rising artists, and celebrate our culture in one vibrant community.
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <Link href="/register">
               <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                Join the Community
+                Join EthioWave
               </Button>
             </Link>
             <Link href="/discover">
@@ -59,25 +61,30 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {loadingTracks ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-xl" />
+            Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
             ))
           ) : Array.isArray(trendingTracks) && trendingTracks.slice(0, 6).map((track) => (
             <Link key={track.id} href={`/tracks/${track.id}`}>
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer bg-card/50 hover:bg-card">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-md bg-secondary/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                    {track.thumbnail ? (
-                      <img src={track.thumbnail} alt={track.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <Play className="w-8 h-8 text-secondary" />
-                    )}
+              <Card className="hover:border-primary/50 transition-colors cursor-pointer bg-card/50 hover:bg-card group">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-lg bg-secondary/20 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                    <img
+                      src={`https://img.youtube.com/vi/${track.youtubeId}/mqdefault.jpg`}
+                      alt={track.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                      <Play className="w-5 h-5 text-white fill-white" />
+                    </div>
                   </div>
-                  <div className="overflow-hidden">
-                    <h3 className="font-semibold truncate">{track.title}</h3>
-                    <p className="text-sm text-muted-foreground truncate">{track.artistName}</p>
+                  <div className="overflow-hidden flex-1 min-w-0">
+                    <h3 className="font-semibold truncate text-sm group-hover:text-primary transition-colors">{track.title}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{track.artistName}</p>
+                    <p className="text-xs text-muted-foreground/60">{track.genre}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -107,13 +114,14 @@ export default function Home() {
               <div className="group cursor-pointer text-center space-y-3">
                 <div className="aspect-square rounded-full overflow-hidden border-4 border-background group-hover:border-primary transition-colors bg-muted flex items-center justify-center">
                   {artist.avatar ? (
-                    <img src={artist.avatar} alt={artist.displayName} className="w-full h-full object-cover" />
+                    <img src={artist.avatar} alt={artist.displayName} className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(artist.displayName)}&background=8B1A1A&color=fff&size=200`; }} />
                   ) : (
                     <UserIcon className="w-1/2 h-1/2 text-muted-foreground" />
                   )}
                 </div>
                 <div>
-                  <h3 className="font-medium group-hover:text-primary transition-colors">{artist.displayName}</h3>
+                  <h3 className="font-medium group-hover:text-primary transition-colors text-sm">{artist.displayName}</h3>
                   <p className="text-xs text-muted-foreground">{artist.genre}</p>
                 </div>
               </div>
@@ -122,18 +130,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Security highlight */}
-      <section className="rounded-2xl border border-secondary/30 bg-secondary/5 p-8 flex flex-col md:flex-row items-center gap-8">
-        <Shield className="w-16 h-16 text-secondary flex-shrink-0" />
-        <div className="flex-1 text-center md:text-left">
-          <h2 className="text-2xl font-bold">Built with security at its core</h2>
-          <p className="text-muted-foreground mt-2">
-            HabeshaShield protects the Ethiopian music community with JWT authentication, bcrypt encryption, rate limiting, and real-time security monitoring.
-          </p>
-        </div>
-        <Link href="/security">
-          <Button variant="outline" className="flex-shrink-0">Learn More</Button>
-        </Link>
+      {/* Stats section */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Artists", value: "50+" },
+          { label: "Tracks", value: "500+" },
+          { label: "Genres", value: "15+" },
+          { label: "Community Members", value: "Growing" },
+        ].map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-border bg-card/50 p-6 text-center">
+            <p className="text-3xl font-bold text-primary">{stat.value}</p>
+            <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+          </div>
+        ))}
       </section>
     </div>
   );

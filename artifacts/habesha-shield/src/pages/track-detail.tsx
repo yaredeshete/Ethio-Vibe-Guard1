@@ -9,7 +9,7 @@ import {
   useReportTrack,
 } from "@workspace/api-client-react";
 import { useAuth } from "../contexts/AuthContext";
-import { Heart, MessageSquare, Flag, ArrowLeft, Send, UserCircle } from "lucide-react";
+import { Heart, MessageSquare, Flag, ArrowLeft, Send, UserCircle, ExternalLink, Play } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Card, CardContent } from "../components/ui/card";
@@ -22,6 +22,7 @@ export default function TrackDetail() {
   const [comment, setComment] = useState("");
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [showEmbed, setShowEmbed] = useState(false);
 
   const { data: track, isLoading, refetch } = useGetTrack(id!);
   const { data: comments, refetch: refetchComments } = useListComments(id!);
@@ -57,7 +58,7 @@ export default function TrackDetail() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-3xl mx-auto">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="aspect-video w-full rounded-xl" />
         <Skeleton className="h-24 w-full" />
@@ -83,15 +84,38 @@ export default function TrackDetail() {
       </Link>
 
       <div className="rounded-xl overflow-hidden border border-border bg-card">
-        <div className="aspect-video">
-          <iframe
-            className="w-full h-full"
-            src={`https://www.youtube.com/embed/${track.youtubeId}?rel=0&modestbranding=1`}
-            title={track.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
+        {/* Video / Thumbnail area */}
+        {showEmbed ? (
+          <div className="aspect-video">
+            <iframe
+              className="w-full h-full"
+              src={`https://www.youtube.com/embed/${track.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+              title={track.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <div className="aspect-video relative bg-black group cursor-pointer" onClick={() => setShowEmbed(true)}>
+            <img
+              src={`https://img.youtube.com/vi/${track.youtubeId}/maxresdefault.jpg`}
+              alt={track.title}
+              className="w-full h-full object-cover opacity-90"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${track.youtubeId}/hqdefault.jpg`;
+              }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+              <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                <Play className="w-8 h-8 text-white fill-white ml-1" />
+              </div>
+            </div>
+            <div className="absolute bottom-3 right-3">
+              <Badge className="bg-black/60 text-white text-xs">Click to Play</Badge>
+            </div>
+          </div>
+        )}
+
         <div className="p-6 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -109,7 +133,7 @@ export default function TrackDetail() {
             <p className="text-sm text-muted-foreground">{track.description}</p>
           )}
 
-          <div className="flex items-center gap-4 pt-2">
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
             <Button
               variant={track.isLiked ? "default" : "outline"}
               size="sm"
@@ -118,12 +142,23 @@ export default function TrackDetail() {
               disabled={!user || likeMutation.isPending || unlikeMutation.isPending}
             >
               <Heart className={`w-4 h-4 ${track.isLiked ? "fill-current" : ""}`} />
-              {track.likesCount}
+              {track.likesCount} Likes
             </Button>
             <Button variant="ghost" size="sm" className="gap-2 pointer-events-none">
               <MessageSquare className="w-4 h-4" />
-              {track.commentsCount}
+              {track.commentsCount} Comments
             </Button>
+            <a
+              href={`https://www.youtube.com/watch?v=${track.youtubeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Button variant="outline" size="sm" className="gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Watch on YouTube
+              </Button>
+            </a>
             {user && (
               <Button
                 variant="ghost"
@@ -174,7 +209,7 @@ export default function TrackDetail() {
         <div className="space-y-4">
           {comments && comments.length > 0 ? comments.map((c) => (
             <div key={c.id} className="flex gap-3">
-              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {c.avatar ? (
                   <img src={c.avatar} className="w-full h-full object-cover rounded-full" alt={c.username} />
                 ) : (

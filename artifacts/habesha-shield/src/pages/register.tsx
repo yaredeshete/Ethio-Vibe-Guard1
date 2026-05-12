@@ -5,7 +5,7 @@ import { useRegister } from "@workspace/api-client-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Shield } from "lucide-react";
+import { Music2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Register() {
@@ -38,11 +38,11 @@ export default function Register() {
     <div className="min-h-[80vh] flex items-center justify-center py-12">
       <div className="w-full max-w-md space-y-8 p-8 border border-border/50 rounded-2xl bg-card">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <Shield className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-2">
+            <Music2 className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Create Account</h1>
-          <p className="text-sm text-muted-foreground">Join the HabeshaShield community</p>
+          <h1 className="text-2xl font-bold tracking-tight">Join EthioWave</h1>
+          <p className="text-sm text-muted-foreground">Discover and celebrate Ethiopian music</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -63,7 +63,7 @@ export default function Register() {
               <Input 
                 id="username" 
                 type="text" 
-                placeholder="habeshamusic" 
+                placeholder="ethiomusic" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -96,7 +96,7 @@ export default function Register() {
             className="w-full" 
             disabled={registerMutation.isPending}
           >
-            {registerMutation.isPending ? "Creating Account..." : "Sign Up"}
+            {registerMutation.isPending ? "Creating Account..." : "Create Account"}
           </Button>
         </form>
 

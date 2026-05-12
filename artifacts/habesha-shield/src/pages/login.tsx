@@ -5,7 +5,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Shield } from "lucide-react";
+import { Music2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -36,11 +36,11 @@ export default function Login() {
     <div className="min-h-[80vh] flex items-center justify-center">
       <div className="w-full max-w-md space-y-8 p-8 border border-border/50 rounded-2xl bg-card">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <Shield className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-2">
+            <Music2 className="w-6 h-6 text-white" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">Welcome Back</h1>
-          <p className="text-sm text-muted-foreground">Sign in to HabeshaShield</p>
+          <p className="text-sm text-muted-foreground">Sign in to EthioWave</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -57,9 +57,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-              </div>
+              <Label htmlFor="password">Password</Label>
               <Input 
                 id="password" 
                 type="password" 

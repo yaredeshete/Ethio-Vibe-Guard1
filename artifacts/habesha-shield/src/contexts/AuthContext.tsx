@@ -14,11 +14,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("habesha_token"));
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("ethiowave_token"));
 
   // Register the token getter so customFetch sends Authorization header on every request
   useEffect(() => {
-    setAuthTokenGetter(() => localStorage.getItem("habesha_token"));
+    setAuthTokenGetter(() => localStorage.getItem("ethiowave_token"));
     return () => setAuthTokenGetter(null);
   }, []);
 
@@ -32,12 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (error) {
       setToken(null);
-      localStorage.removeItem("habesha_token");
+      localStorage.removeItem("ethiowave_token");
     }
   }, [error]);
 
   const login = useCallback((newToken: string, _user: User) => {
-    localStorage.setItem("habesha_token", newToken);
+    localStorage.setItem("ethiowave_token", newToken);
     setToken(newToken);
     setAuthTokenGetter(() => newToken);
     // Refetch user from server to populate context
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refetch]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem("habesha_token");
+    localStorage.removeItem("ethiowave_token");
     setToken(null);
     setAuthTokenGetter(() => null);
   }, []);

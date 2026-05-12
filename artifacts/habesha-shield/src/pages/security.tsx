@@ -201,7 +201,7 @@ export default function Security() {
 
       {/* Platform Security Features */}
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">How HabeshaShield Protects You</h2>
+        <h2 className="text-2xl font-bold">How EthioWave Protects You</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { title: "JWT Authentication", desc: "Cryptographically signed tokens ensure only you can access your account.", icon: Lock },
