@@ -1,22 +1,39 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: HabeshaShield API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User management
+  - name: artists
+    description: Artist profiles
+  - name: tracks
+    description: Music tracks
+  - name: comments
+    description: Track comments
+  - name: discussions
+    description: Community discussions
+  - name: notifications
+    description: Notifications
+  - name: admin
+    description: Admin operations
+  - name: dashboard
+    description: Dashboard summaries
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +41,813 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # USERS
+  /users/{username}:
+    get:
+      operationId: getUserProfile
+      tags: [users]
+      summary: Get a user profile by username
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/profile:
+    put:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update current user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/follow:
+    post:
+      operationId: followUser
+      tags: [users]
+      summary: Follow a user/artist
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Followed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      operationId: unfollowUser
+      tags: [users]
+      summary: Unfollow a user/artist
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unfollowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # ARTISTS
+  /artists:
+    get:
+      operationId: listArtists
+      tags: [artists]
+      summary: List all artists
+      parameters:
+        - name: genre
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of artists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtistListResponse"
+
+  /artists/featured:
+    get:
+      operationId: getFeaturedArtists
+      tags: [artists]
+      summary: Get featured artists
+      responses:
+        "200":
+          description: Featured artists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artist"
+
+  /artists/{id}:
+    get:
+      operationId: getArtist
+      tags: [artists]
+      summary: Get a specific artist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Artist profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artist"
+
+  # TRACKS
+  /tracks:
+    get:
+      operationId: listTracks
+      tags: [tracks]
+      summary: List tracks
+      parameters:
+        - name: genre
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: artistId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: List of tracks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrackListResponse"
+
+  /tracks/genres:
+    get:
+      operationId: listGenres
+      tags: [tracks]
+      summary: List available genres
+      responses:
+        "200":
+          description: List of genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Genre"
+
+  /tracks/liked:
+    get:
+      operationId: getLikedTracks
+      tags: [tracks]
+      summary: Get tracks liked by current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Liked tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Track"
+
+  /tracks/trending:
+    get:
+      operationId: getTrendingTracks
+      tags: [tracks]
+      summary: Get trending tracks
+      responses:
+        "200":
+          description: Trending tracks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Track"
+
+  /tracks/{id}:
+    get:
+      operationId: getTrack
+      tags: [tracks]
+      summary: Get a specific track
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Track details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+
+  /tracks/{id}/like:
+    post:
+      operationId: likeTrack
+      tags: [tracks]
+      summary: Like a track
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+    delete:
+      operationId: unlikeTrack
+      tags: [tracks]
+      summary: Unlike a track
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unliked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /tracks/{id}/report:
+    post:
+      operationId: reportTrack
+      tags: [tracks]
+      summary: Report a track
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "200":
+          description: Reported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # COMMENTS
+  /tracks/{id}/comments:
+    get:
+      operationId: listComments
+      tags: [comments]
+      summary: List comments for a track
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Add a comment to a track
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # DISCUSSIONS
+  /discussions:
+    get:
+      operationId: listDiscussions
+      tags: [discussions]
+      summary: List community discussions
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: List of discussions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscussionListResponse"
+    post:
+      operationId: createDiscussion
+      tags: [discussions]
+      summary: Create a new discussion
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscussionInput"
+      responses:
+        "201":
+          description: Discussion created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discussion"
+
+  /discussions/{id}:
+    get:
+      operationId: getDiscussion
+      tags: [discussions]
+      summary: Get a single discussion with replies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discussion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscussionDetail"
+
+  /discussions/{id}/replies:
+    post:
+      operationId: createReply
+      tags: [discussions]
+      summary: Reply to a discussion
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyInput"
+      responses:
+        "201":
+          description: Reply created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reply"
+
+  # NOTIFICATIONS
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: Get notifications for current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark notification as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # DASHBOARD
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # ADMIN
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: Admin - list all users
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListResponse"
+
+  /admin/users/{id}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Admin - update a user (ban, change role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin]
+      summary: Admin - delete a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/reports:
+    get:
+      operationId: listReports
+      tags: [admin]
+      summary: Admin - list reported content
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+
+  /admin/reports/{id}:
+    patch:
+      operationId: resolveReport
+      tags: [admin]
+      summary: Admin - resolve a report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportResolution"
+      responses:
+        "200":
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/security-alerts:
+    get:
+      operationId: listSecurityAlerts
+      tags: [admin]
+      summary: Admin - list security alerts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Security alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SecurityAlert"
+
+  /admin/audit-logs:
+    get:
+      operationId: listAuditLogs
+      tags: [admin]
+      summary: Admin - list audit logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Admin - get platform analytics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAnalytics"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +857,593 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # AUTH
+    RegisterInput:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          minLength: 3
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        displayName:
+          type: string
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # USER
+    User:
+      type: object
+      required: [id, username, email, role, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, artist, admin]
+        isVerified:
+          type: boolean
+        isBanned:
+          type: boolean
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        createdAt:
+          type: string
+
+    UserProfile:
+      type: object
+      required: [id, username, role, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role:
+          type: string
+        isVerified:
+          type: boolean
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        tracksCount:
+          type: integer
+        isFollowing:
+          type: boolean
+        createdAt:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+
+    # ARTIST
+    Artist:
+      type: object
+      required: [id, username, displayName, genre, createdAt]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        genre:
+          type: string
+        followersCount:
+          type: integer
+        tracksCount:
+          type: integer
+        isVerified:
+          type: boolean
+        isFeatured:
+          type: boolean
+        createdAt:
+          type: string
+
+    ArtistListResponse:
+      type: object
+      required: [artists, total, page, totalPages]
+      properties:
+        artists:
+          type: array
+          items:
+            $ref: "#/components/schemas/Artist"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    # TRACK
+    Track:
+      type: object
+      required: [id, title, artistId, artistName, genre, youtubeId, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        artistId:
+          type: string
+        artistName:
+          type: string
+        artistAvatar:
+          type: ["string", "null"]
+        genre:
+          type: string
+        youtubeId:
+          type: string
+        thumbnail:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        likesCount:
+          type: integer
+        commentsCount:
+          type: integer
+        isLiked:
+          type: boolean
+        isTrending:
+          type: boolean
+        createdAt:
+          type: string
+
+    TrackListResponse:
+      type: object
+      required: [tracks, total, page, totalPages]
+      properties:
+        tracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Track"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    Genre:
+      type: object
+      required: [id, name, tracksCount]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tracksCount:
+          type: integer
+        color:
+          type: ["string", "null"]
+
+    # COMMENTS
+    Comment:
+      type: object
+      required: [id, trackId, userId, username, text, createdAt]
+      properties:
+        id:
+          type: string
+        trackId:
+          type: string
+        userId:
+          type: string
+        username:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        text:
+          type: string
+        createdAt:
+          type: string
+
+    CommentInput:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    # DISCUSSIONS
+    Discussion:
+      type: object
+      required: [id, title, category, authorId, authorName, repliesCount, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        authorAvatar:
+          type: ["string", "null"]
+        repliesCount:
+          type: integer
+        isPinned:
+          type: boolean
+        createdAt:
+          type: string
+
+    DiscussionDetail:
+      type: object
+      required: [id, title, category, authorId, authorName, content, replies, createdAt]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        authorAvatar:
+          type: ["string", "null"]
+        repliesCount:
+          type: integer
+        isPinned:
+          type: boolean
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reply"
+        createdAt:
+          type: string
+
+    DiscussionListResponse:
+      type: object
+      required: [discussions, total, page, totalPages]
+      properties:
+        discussions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Discussion"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    DiscussionInput:
+      type: object
+      required: [title, content, category]
+      properties:
+        title:
+          type: string
+          minLength: 5
+        content:
+          type: string
+          minLength: 10
+        category:
+          type: string
+
+    Reply:
+      type: object
+      required: [id, discussionId, authorId, authorName, content, createdAt]
+      properties:
+        id:
+          type: string
+        discussionId:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        authorAvatar:
+          type: ["string", "null"]
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    ReplyInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+          minLength: 1
+
+    # REPORT
+    ReportInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+        details:
+          type: string
+
+    Report:
+      type: object
+      required: [id, targetType, targetId, reporterId, reason, status, createdAt]
+      properties:
+        id:
+          type: string
+        targetType:
+          type: string
+          enum: [track, comment, user, discussion]
+        targetId:
+          type: string
+        reporterId:
+          type: string
+        reporterName:
+          type: string
+        reason:
+          type: string
+        details:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, resolved, dismissed]
+        resolvedBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ReportResolution:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [resolve, dismiss]
+        notes:
+          type: string
+
+    # NOTIFICATIONS
+    Notification:
+      type: object
+      required: [id, userId, type, message, isRead, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [follow, like, comment, reply, security_alert, system]
+        message:
+          type: string
+        link:
+          type: ["string", "null"]
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+
+    # SECURITY
+    SecurityAlert:
+      type: object
+      required: [id, type, severity, message, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [failed_login, rate_limit, suspicious_activity, account_locked, xss_attempt]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        message:
+          type: string
+        ipAddress:
+          type: ["string", "null"]
+        userId:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        isResolved:
+          type: boolean
+        createdAt:
+          type: string
+
+    AuditLog:
+      type: object
+      required: [id, action, userId, createdAt]
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        userId:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        ipAddress:
+          type: ["string", "null"]
+        details:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AuditLogListResponse:
+      type: object
+      required: [logs, total, page, totalPages]
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    # DASHBOARD
+    DashboardSummary:
+      type: object
+      required: [likedTracksCount, followingCount, recentActivity, recommendedTracks]
+      properties:
+        likedTracksCount:
+          type: integer
+        followingCount:
+          type: integer
+        notificationsCount:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+        recommendedTracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Track"
+
+    ActivityItem:
+      type: object
+      required: [id, type, message, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        link:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    # ADMIN
+    AdminUserListResponse:
+      type: object
+      required: [users, total, page, totalPages]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, artist, admin]
+        isBanned:
+          type: boolean
+        isVerified:
+          type: boolean
+
+    AdminAnalytics:
+      type: object
+      required: [totalUsers, totalArtists, totalTracks, totalDiscussions, newUsersThisWeek, activeUsersToday, genreBreakdown, topTracks]
+      properties:
+        totalUsers:
+          type: integer
+        totalArtists:
+          type: integer
+        totalTracks:
+          type: integer
+        totalDiscussions:
+          type: integer
+        newUsersThisWeek:
+          type: integer
+        activeUsersToday:
+          type: integer
+        pendingReports:
+          type: integer
+        unresolvedAlerts:
+          type: integer
+        genreBreakdown:
+          type: array
+          items:
+            type: object
+            required: [genre, count]
+            properties:
+              genre:
+                type: string
+              count:
+                type: integer
+        topTracks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Track"
