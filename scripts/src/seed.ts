@@ -851,7 +851,10 @@ async function seed() {
     username: "admin", email: "admin@ethiowave.com", passwordHash: adminHash,
     displayName: "EthioWave Admin", role: "admin", isVerified: true,
     avatar: "https://ui-avatars.com/api/?name=EthioWave+Admin&background=8B1A1A&color=fff&size=200",
-  }).onConflictDoUpdate({ target: usersTable.username, set: { displayName: "EthioWave Admin" } });
+  }).onConflictDoUpdate({
+    target: usersTable.username,
+    set: { email: "admin@ethiowave.com", passwordHash: adminHash, displayName: "EthioWave Admin" },
+  });
 
   // Artists
   console.log("  🎤 Creating artists...");
@@ -866,6 +869,8 @@ async function seed() {
     }).onConflictDoUpdate({
       target: usersTable.username,
       set: {
+        email: artist.username + "@ethiowave.com",
+        passwordHash: artistPassword,
         displayName: artist.displayName, bio: artist.bio, avatar: artist.avatar,
         genre: artist.genre, isVerified: artist.isVerified, isFeatured: artist.isFeatured,
       },

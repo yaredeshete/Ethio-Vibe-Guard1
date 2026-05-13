@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../contexts/AuthContext";
-import { Music2, Home, Compass, Users, MessageSquare, Settings, ShieldCheck, LogOut, LayoutDashboard, ShieldAlert } from "lucide-react";
+import { Music2, Home, Compass, Users, MessageSquare, Settings, ShieldCheck, LogOut, LayoutDashboard, ShieldAlert, Heart } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function Sidebar() {
@@ -12,6 +12,7 @@ export function Sidebar() {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: !!user },
     { href: "/discover", label: "Discover", icon: Compass, show: true },
     { href: "/artists", label: "Artists", icon: Users, show: true },
+    { href: "/liked", label: "Liked Songs", icon: Heart, show: !!user },
     { href: "/community", label: "Community", icon: MessageSquare, show: true },
     { href: "/security", label: "Security", icon: ShieldCheck, show: true },
     { href: "/settings", label: "Settings", icon: Settings, show: !!user },

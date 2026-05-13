@@ -16,6 +16,7 @@ import Community from "./pages/community";
 import DiscussionDetail from "./pages/discussion-detail";
 import Security from "./pages/security";
 import Profile from "./pages/profile";
+import LikedSongs from "./pages/liked";
 import Settings from "./pages/settings";
 import Admin from "./pages/admin";
 
@@ -41,6 +42,10 @@ export default function App() {
             <Route path="/community/:id" component={DiscussionDetail} />
             <Route path="/security" component={Security} />
             <Route path="/profile/:username" component={Profile} />
+
+            <Route path="/liked">
+              <ProtectedRoute><LikedSongs /></ProtectedRoute>
+            </Route>
 
             <Route path="/settings">
               <ProtectedRoute><Settings /></ProtectedRoute>
