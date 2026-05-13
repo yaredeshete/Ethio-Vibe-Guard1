@@ -80,8 +80,8 @@ export default function Discover() {
         {genres?.map((g) => (
           <Button
             key={g.id}
-            variant={genre === g.id ? "default" : "outline"}
-            onClick={() => { setGenre(g.id); setPage(1); }}
+            variant={genre === g.name ? "default" : "outline"}
+            onClick={() => { setGenre(g.name); setPage(1); }}
             className="rounded-full"
             size="sm"
           >

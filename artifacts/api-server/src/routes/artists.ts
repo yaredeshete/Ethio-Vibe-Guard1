@@ -1,11 +1,13 @@
 import { Router } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq, ilike, and, sql } from "drizzle-orm";
+import { db, usersTable, tracksTable } from "@workspace/db";
+import { eq, ilike, and, sql, count } from "drizzle-orm";
 import { optionalAuth } from "../middlewares/auth";
 
 const router = Router();
 
-function formatArtist(user: typeof usersTable.$inferSelect) {
+type ArtistRow = typeof usersTable.$inferSelect & { tracksCount?: number };
+
+function formatArtist(user: ArtistRow) {
   return {
     id: String(user.id),
     username: user.username,
@@ -14,12 +16,19 @@ function formatArtist(user: typeof usersTable.$inferSelect) {
     bio: user.bio,
     genre: user.genre ?? "Various",
     followersCount: user.followersCount,
-    tracksCount: 0,
+    tracksCount: user.tracksCount ?? 0,
     isVerified: user.isVerified,
     isFeatured: user.isFeatured,
     createdAt: user.createdAt.toISOString(),
   };
 }
+
+// Subquery that returns track count per artist_id
+const trackCountSq = db
+  .select({ artistId: tracksTable.artistId, cnt: count(tracksTable.id).as("cnt") })
+  .from(tracksTable)
+  .groupBy(tracksTable.artistId)
+  .as("tc");
 
 // GET /api/artists
 router.get("/artists", optionalAuth, async (req, res) => {
@@ -42,17 +51,21 @@ router.get("/artists", optionalAuth, async (req, res) => {
       .from(usersTable)
       .where(whereClause);
 
-    const artists = await db
-      .select()
+    const rows = await db
+      .select({
+        ...usersTable,
+        tracksCount: sql<number>`coalesce(${trackCountSq.cnt}, 0)`,
+      })
       .from(usersTable)
+      .leftJoin(trackCountSq, eq(usersTable.id, trackCountSq.artistId))
       .where(whereClause)
-      .orderBy(sql`${usersTable.followersCount} DESC`)
+      .orderBy(sql`coalesce(${trackCountSq.cnt}, 0) DESC, ${usersTable.followersCount} DESC`)
       .limit(limitNum)
       .offset(offset);
 
     const total = countResult?.count ?? 0;
     res.json({
-      artists: artists.map(formatArtist),
+      artists: rows.map(formatArtist),
       total,
       page: pageNum,
       totalPages: Math.ceil(total / limitNum),
@@ -66,14 +79,18 @@ router.get("/artists", optionalAuth, async (req, res) => {
 // GET /api/artists/featured
 router.get("/artists/featured", async (req, res) => {
   try {
-    const artists = await db
-      .select()
+    const rows = await db
+      .select({
+        ...usersTable,
+        tracksCount: sql<number>`coalesce(${trackCountSq.cnt}, 0)`,
+      })
       .from(usersTable)
+      .leftJoin(trackCountSq, eq(usersTable.id, trackCountSq.artistId))
       .where(and(eq(usersTable.role, "artist"), eq(usersTable.isFeatured, true)))
       .orderBy(sql`${usersTable.followersCount} DESC`)
       .limit(8);
 
-    res.json(artists.map(formatArtist));
+    res.json(rows.map(formatArtist));
   } catch (err) {
     req.log.error({ err }, "Featured artists error");
     res.status(500).json({ error: "Failed to fetch featured artists" });
@@ -89,18 +106,22 @@ router.get("/artists/:id", optionalAuth, async (req, res) => {
   }
 
   try {
-    const [artist] = await db
-      .select()
+    const [row] = await db
+      .select({
+        ...usersTable,
+        tracksCount: sql<number>`coalesce(${trackCountSq.cnt}, 0)`,
+      })
       .from(usersTable)
+      .leftJoin(trackCountSq, eq(usersTable.id, trackCountSq.artistId))
       .where(and(eq(usersTable.id, id), eq(usersTable.role, "artist")))
       .limit(1);
 
-    if (!artist) {
+    if (!row) {
       res.status(404).json({ error: "Artist not found" });
       return;
     }
 
-    res.json(formatArtist(artist));
+    res.json(formatArtist(row));
   } catch (err) {
     req.log.error({ err }, "Get artist error");
     res.status(500).json({ error: "Failed to fetch artist" });
